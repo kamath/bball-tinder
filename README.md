@@ -149,6 +149,15 @@ clean.json  ──▶  players.json  ──▶  index.html
 - **`clean.json`** — 602 players, 2026 season. Note: it's JS-object notation, *not* strict JSON (unquoted keys, leading-dot number literals like `.94`), so it's parsed with `new Function("return (" + raw + ")")()`, not `JSON.parse`. Each player already carries z-scored metrics (`*_z`) and RAPM (`off` / `def` / `tot`).
 - **`compute_ovr.js`** — applies the pillar formula above and writes the trimmed **`players.json`** (just the fields the app needs).
 - **`build_html.js`** — embeds `players.json` and team colors directly into a single **`index.html`**: all styles, all game logic, no external JS. Run it to regenerate the page after any change.
+- **`og.html` → `og-image.png`** — the source for the social link-preview card (iMessage / X / Slack / Discord / Facebook). It's a standalone 1200×630 HTML page rasterized to PNG with headless Chrome:
+
+  ```bash
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+    --headless --disable-gpu --hide-scrollbars --screenshot=og-image.png \
+    --window-size=1200,630 --virtual-time-budget=5000 "file://$PWD/og.html"
+  ```
+
+  The Open Graph / Twitter Card `<meta>` tags in `index.html` point at `og-image.png` via an **absolute URL** (defaulted to `https://kamath.github.io/bball-tinder/`). Edit that base in `build_html.js` if you host it elsewhere — relative paths don't work for social scrapers.
 
 ## Running it
 

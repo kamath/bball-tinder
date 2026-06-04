@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--paper:#f2e7d2;--paper2:#ece0c7;--ink:#16130f;--ink2:#3b342a;--orange:#e2521b;--wood:#d9c6a1;--green:#1c7c54;--blue:#2e6ba8;--amber:#c8852b}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{background:var(--paper);font-family:'DM Mono',monospace;color:var(--ink);position:relative;padding:54px 60px}
+body::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(22,19,15,.16) 1px,transparent 1.7px);background-size:6px 6px;opacity:.4;mix-blend-mode:multiply}
+body::after{content:'';position:absolute;inset:0;background:radial-gradient(900px 460px at 88% -10%,rgba(226,82,27,.16),transparent 70%),radial-gradient(700px 500px at -5% 115%,rgba(28,124,84,.12),transparent 70%);mix-blend-mode:multiply}
+.wrap{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+.rule{height:5px;background:var(--ink)}
+.kicker{font-size:19px;letter-spacing:9px;text-transform:uppercase;color:var(--orange);font-weight:500;margin:26px 0 6px}
+.title{font-family:'Anton';font-size:188px;line-height:.8;text-transform:uppercase;letter-spacing:-1px;
+  background:linear-gradient(178deg,var(--ink) 52%,var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:6px 6px 0 rgba(226,82,27,.20)}
+.dek{font-size:22px;letter-spacing:2px;text-transform:uppercase;color:var(--ink2);margin-top:26px;font-weight:500}
+.dek b{color:var(--ink)}
+.spacer{flex:1}
+.bars{display:flex;gap:14px;margin:22px 0 0}
+.barcol{flex:1}
+.barlab{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ink2);margin-bottom:7px}
+.seg{display:flex;gap:4px}
+.seg span{flex:1;height:18px;border:2px solid var(--ink);background:var(--paper)}
+.foot{display:flex;align-items:center;justify-content:space-between;margin-top:30px;background:var(--ink);color:var(--paper);padding:14px 22px}
+.foot .l{font-family:'Anton';font-size:26px;letter-spacing:1px;text-transform:uppercase}
+.foot .l .o{color:var(--orange)}
+.foot .r{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--wood)}
+.ball{position:absolute;top:64px;right:60px;width:120px;height:120px;border-radius:50%;border:6px solid var(--ink);
+  background:var(--orange);box-shadow:9px 9px 0 var(--ink);transform:rotate(-8deg);z-index:2;display:flex;align-items:center;justify-content:center;font-size:64px}
+</style></head>
+<body>
+<div class="ball">🏀</div>
+<div class="wrap">
+  <div class="rule"></div>
+  <div class="kicker">2026 Season · The Draft Game</div>
+  <div class="title">Hardwood<br>Draft</div>
+  <div class="dek">Pick the better player · <b>build a five</b> · see who beats you</div>
+  <div class="spacer"></div>
+  <div class="bars">
+    <div class="barcol"><div class="barlab">Scoring</div><div class="seg" style="--c:var(--orange)"><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span style="background:var(--orange)"></span><span></span></div></div>
+    <div class="barcol"><div class="barlab">Playmaking</div><div class="seg"><span style="background:var(--amber)"></span><span style="background:var(--amber)"></span><span style="background:var(--amber)"></span><span style="background:var(--amber)"></span><span style="background:var(--amber)"></span><span style="background:var(--amber)"></span><span></span><span></span></div></div>
+    <div class="barcol"><div class="barlab">Defense</div><div class="seg"><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span style="background:var(--green)"></span><span></span></div></div>
+    <div class="barcol"><div class="barlab">Size</div><div class="seg"><span style="background:var(--blue)"></span><span style="background:var(--blue)"></span><span style="background:var(--blue)"></span><span style="background:var(--blue)"></span><span style="background:var(--blue)"></span><span></span><span></span><span></span></div></div>
+  </div>
+  <div class="foot">
+    <div class="l">🏀 Hardwood <span class="o">Draft</span></div>
+    <div class="r">Stats by Dunks &amp; Threes</div>
+  </div>
+</div>
+</body></html>
