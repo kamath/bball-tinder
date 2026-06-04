@@ -127,6 +127,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:4px 4px 0 var(--ink)}
 .btn.primary{background:var(--orange);color:#fff}
 .btn.primary:hover{background:#c8410f}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ghbar{display:flex;gap:12px;justify-content:center;margin-top:44px;flex-wrap:wrap}
+.credit{text-align:center;font-family:'DM Mono';font-size:10px;color:var(--muted);margin-top:16px;letter-spacing:1px;line-height:1.7}
+.credit a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange)}
 .pickhint{text-align:center;font-family:'DM Mono';font-size:11px;color:var(--muted);margin:14px 0 4px;letter-spacing:1px}
 
 /* ---------- RESULTS · ONE SHAREABLE CARD ---------- */
@@ -167,6 +171,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .mk-bar{display:flex;gap:3px}
 .mk-seg{flex:1;height:14px;border:1.5px solid var(--ink);background:var(--paper)}
 .mk .mk-seg.on{transform-origin:bottom;animation:segpop .32s cubic-bezier(.2,1.3,.4,1) both}
+.mk.noanim .mk-seg.on{animation:none}
+.board-sub{font-family:'DM Mono';font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink2);margin:16px 0 9px;border-top:2px dashed var(--ink);padding-top:11px}
+.mk-empty{font-family:'DM Mono';font-size:11px;color:var(--muted);text-align:center;padding:8px 4px;letter-spacing:.4px}
 @keyframes segpop{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
 .mk-v{font-family:'Anton';font-weight:400;font-size:18px;text-align:right;line-height:1}
 .rankrow{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-bottom:14px}
@@ -279,23 +286,30 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
     <div class="arena" id="arena"></div>
     <p class="pickhint">▲ Tap a card to draft that player ▲</p>
     <div class="controls">
-      <button class="btn" id="skipbtn" onclick="doSkip()">⟳ Skip Both</button>
+      <button class="btn" id="skipbtn" onclick="doSkip()">⟳ Skip Both · <b id="skipsleft">3</b> left</button>
       <button class="btn" onclick="reset()">Reset Board</button>
     </div>
 
     <div class="board">
       <div class="board-head">
         <span class="lbl">Your Five</span>
-        <span class="clock">Skips left&nbsp; <b id="skipsleft">3</b></span>
+        <span class="clock">Squad ratings update live</span>
       </div>
       <div class="slots" id="slots"></div>
+      <div class="board-sub">Team Squad Ratings · Live</div>
+      <div class="mk noanim" id="livemk"></div>
     </div>
   </div>
 
   <section id="results"></section>
 
-  <p style="text-align:center;font-family:'DM Mono';font-size:10px;color:var(--muted);margin-top:40px;letter-spacing:1px">
-    602 players · 2026 season · OVR built from RAPM impact + box-score z-scores
+  <div class="ghbar">
+    <a class="btn" href="https://github.com/kamath/bball-tinder#readme" target="_blank" rel="noopener">📖 How It Works</a>
+    <a class="btn primary" href="https://github.com/kamath/bball-tinder" target="_blank" rel="noopener">★ Star on GitHub</a>
+  </div>
+  <p class="credit">
+    602 players · 2026 season · OVR built from RAPM impact + box-score z-scores<br>
+    Stats &amp; ratings courtesy of <a href="https://dunksandthrees.com/" target="_blank" rel="noopener">Dunks &amp; Threes</a>
   </p>
 </div>
 
@@ -316,7 +330,17 @@ function segBar(label,val,seg){
 
 let lineup=[],skips=3,used=new Set(),pair=[];
 
-function rnd(){return Math.floor(Math.random()*PLAYERS.length);}
+// Skill-weighted draw: weight ∝ (OVR-58)^3 → typical matchup player is a top rotation guy (~81 OVR),
+// stars (90+) show ~12% of the time, and bums (≤70, e.g. Biyombo 65) still surface ~2% of the time.
+const DRAFT_EXP=3, DRAFT_BASE=58;
+const PWEIGHT=PLAYERS.map(p=>Math.pow(Math.max(1,p.ovr-DRAFT_BASE),DRAFT_EXP));
+const PCUM=(()=>{let a=0;return PWEIGHT.map(w=>(a+=w));})();
+const PTOT=PCUM[PCUM.length-1];
+function rnd(){ // weighted index via binary search over cumulative weights
+  const r=Math.random()*PTOT;let lo=0,hi=PCUM.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(PCUM[mid]<r)lo=mid+1;else hi=mid;}
+  return lo;
+}
 function newPair(){
   let a,b;
   do{a=rnd();}while(used.has(PLAYERS[a].id));
@@ -358,6 +382,10 @@ function render(){
     else s+=\`<div class="slot"><span class="pk">PICK 0\${i+1}</span><span class="empty">?</span></div>\`;
   }
   document.getElementById('slots').innerHTML=s;
+  // live Squad Ratings for the lineup drafted so far
+  const lm=document.getElementById('livemk');
+  if(!lineup.length)lm.innerHTML='<div class="mk-empty">Draft your first player to start building your squad ratings →</div>';
+  else lm.innerHTML=PK.map(k=>segBar(PLBL[k],Math.round(lineup.reduce((a,p)=>a+p.sub[k],0)/lineup.length),14)).join('');
 }
 function pick(id){
   const p=pair.find(x=>String(x.id)===String(id));
@@ -521,8 +549,7 @@ function finish(){
       <div class="ho" style="color:\${ovrColor(p.ovr)}">\${p.ovr}</div></div>\`;}).join('');
 
   // Mario-Kart-style team ratings across the five pillars
-  const MKLBL={SCO:'Scoring',PLY:'Playmaking',REB:'Size',DEF:'Defense',IMP:'Impact'};
-  const mkHTML=PK.map(k=>segBar(MKLBL[k],Math.round(lineup.reduce((a,p)=>a+p.sub[k],0)/5),14)).join('');
+  const mkHTML=PK.map(k=>segBar(PLBL[k],Math.round(lineup.reduce((a,p)=>a+p.sub[k],0)/5),14)).join('');
 
   let challHTML;
   if(challengers.length===0){
@@ -589,9 +616,13 @@ function finish(){
         <div class="sc-sub"><span class="n">§ 03</span><h3>Who Beats You</h3><span class="ln"></span></div>
         \${challHTML}
       </div>
-      <div class="sc-foot">Hardwood Draft · 2026 · OVR = RAPM impact + box-score z-scores</div>
+      <div class="sc-foot">Hardwood Draft · 2026 · stats &amp; ratings by Dunks &amp; Threes (dunksandthrees.com)</div>
     </div></div>
-    <div class="controls" style="margin-top:22px"><button class="btn primary" onclick="reset()">↻ Draft A New Five</button></div>
+    <div class="controls" style="margin-top:22px">
+      <button class="btn primary" onclick="reset()">↻ Draft A New Five</button>
+      <a class="btn" href="https://github.com/kamath/bball-tinder#readme" target="_blank" rel="noopener">📖 How It Works</a>
+      <a class="btn" href="https://github.com/kamath/bball-tinder" target="_blank" rel="noopener">★ Star</a>
+    </div>
   </div>\`;
 
   countUp('bigovr',avg);
