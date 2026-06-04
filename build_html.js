@@ -54,6 +54,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
   text-shadow:3px 3px 0 rgba(226,82,27,.22)}
 .dek{font-family:'DM Mono',monospace;font-size:clamp(10px,2.4vw,13px);letter-spacing:clamp(1px,1vw,5px);
   text-transform:uppercase;color:var(--orange);font-weight:500;margin-top:9px}
+/* ---------- START / DIFFICULTY PICKER ---------- */
+#start{text-align:center;animation:fade .4s ease both}
+.start-q{font-family:'Anton';font-weight:400;font-size:clamp(22px,5vw,34px);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 20px}
+.modecards{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:720px;margin:0 auto}
+.modecard{font-family:inherit;text-align:left;background:var(--paper);border:3px solid var(--ink);box-shadow:var(--shadow);
+  padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:11px;transition:transform .14s,box-shadow .14s}
+.modecard:hover{transform:translate(-2px,-3px) rotate(-.5deg);box-shadow:10px 12px 0 var(--ink)}
+.modecard:active{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
+.modecard.ball{background:var(--ink)}
+.mc-tag{font-family:'Anton';font-weight:400;font-size:clamp(26px,6vw,34px);text-transform:uppercase;letter-spacing:.5px;line-height:.88;color:var(--orange)}
+.mc-d{font-family:'Archivo';font-size:12.5px;font-weight:500;line-height:1.45;color:var(--ink2)}
+.modecard.ball .mc-d{color:var(--wood)}
+.mc-go{margin-top:auto;font-family:'Anton';font-weight:400;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;
+  background:var(--orange);color:#fff;padding:9px;text-align:center}
+#modeind{color:var(--orange);font-weight:700}
 
 /* ---------- ROSTER / DRAFT BOARD ---------- */
 .board{background:var(--paper2);border:3px solid var(--ink);box-shadow:var(--shadow);
@@ -147,6 +162,21 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .sc-head b{font-family:'Anton';font-weight:400;letter-spacing:1px;font-size:15px}
 .sc-head .o{color:var(--orange)}
 .sc-body{padding:20px 20px 0;position:relative}
+.modebadge{display:flex;align-items:center;gap:11px;border:3px solid var(--ink);padding:10px 14px;margin-bottom:18px}
+.modebadge .mb-ic{font-size:24px;line-height:1;flex-shrink:0}
+.mb-txwrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+.modebadge .mb-tx{font-family:'Anton';font-weight:400;text-transform:uppercase;letter-spacing:.5px;line-height:.9}
+.modebadge .mb-sub{font-family:'DM Mono';font-size:9.5px;letter-spacing:1px;text-transform:uppercase}
+/* I Know Ball: a loud, earned medal */
+.modebadge.ball{background:var(--ink);box-shadow:5px 5px 0 var(--orange);transform:rotate(-.8deg)}
+.modebadge.ball .mb-tx{font-size:clamp(22px,5.5vw,30px);color:var(--orange)}
+.modebadge.ball .mb-sub{color:var(--wood)}
+.modebadge.ball .mb-flex{margin-left:auto;flex-shrink:0;font-family:'Anton';font-weight:400;font-size:13px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--ink);background:var(--gold,#e8b23a);padding:4px 9px;transform:rotate(2deg)}
+/* Easy: modest, muted */
+.modebadge.easy{background:var(--paper2)}
+.modebadge.easy .mb-tx{font-size:17px;color:var(--ink2)}
+.modebadge.easy .mb-sub{color:var(--muted)}
 .hero{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
 .hero-score{text-align:center}
 .hero-score .kicker{font-family:'DM Mono';font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--orange)}
@@ -260,6 +290,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 }
 @media(max-width:520px){
   .hero{grid-template-columns:1fr;gap:14px}
+  .modecards{grid-template-columns:1fr}
   .chal-roster{grid-template-columns:repeat(5,1fr)}
   .chip{padding:7px 2px}
   .chip .cav{width:28px;height:28px;font-size:11px}
@@ -281,8 +312,24 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
     <p class="dek">Pick the better man · Build a five · Three skips on the clock</p>
   </header>
 
-  <div id="game">
-    <p class="matchline">— On the clock · choose your man —</p>
+  <div id="start">
+    <p class="start-q">Pick your difficulty</p>
+    <div class="modecards">
+      <button class="modecard" onclick="startGame('easy')">
+        <span class="mc-tag">Easy</span>
+        <span class="mc-d">Scrubs filtered out — you'll mostly weigh real rotation players. Good for casual fans.</span>
+        <span class="mc-go">Tip Off ▶</span>
+      </button>
+      <button class="modecard ball" onclick="startGame('ball')">
+        <span class="mc-tag">I Know Ball</span>
+        <span class="mc-d">Raw uniform draw — every one of 602 players, deep-bench filler included. For sickos only.</span>
+        <span class="mc-go">Tip Off ▶</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="game" style="display:none">
+    <p class="matchline">— On the clock · <span id="modeind">Easy mode</span> · choose your man —</p>
     <div class="arena" id="arena"></div>
     <p class="pickhint">▲ Tap a card to draft that player ▲</p>
     <div class="controls">
@@ -329,17 +376,38 @@ function segBar(label,val,seg){
 }
 
 let lineup=[],skips=3,used=new Set(),pair=[];
+let easyMode=true; // Easy = skill-weighted draw (fewer bums); "I Know Ball" = raw uniform draw
 
-// Skill-weighted draw: weight ∝ (OVR-58)^3 → typical matchup player is a top rotation guy (~81 OVR),
-// stars (90+) show ~12% of the time, and bums (≤70, e.g. Biyombo 65) still surface ~2% of the time.
-const DRAFT_EXP=3, DRAFT_BASE=58;
-const PWEIGHT=PLAYERS.map(p=>Math.pow(Math.max(1,p.ovr-DRAFT_BASE),DRAFT_EXP));
+// Easy-mode draw weighting (I Know Ball mode ignores this and draws uniformly):
+//  • a logistic FLOOR — 1/(1+e^-((OVR-73)/2)) — saturates at ~1 for rotation-caliber players and up and
+//    decays only for the bottom, so it suppresses "bums" without inflating the OVR tail.
+//  • a TOP-3-ON-TEAM boost (×2.5) — each franchise's three best players are recognizable faces, so they
+//    surface far more often (P(top-3-on-team) ≈ 23% → ~43%), making Easy mode feel like real basketball.
+const DRAFT_MID=73, DRAFT_STEEP=2, TOP3_BOOST=2.5;
+const TEAMRANK=(()=>{ // 0-based rank of each player within their own team by OVR
+  const byTeam={};PLAYERS.forEach((p,i)=>{(byTeam[p.t]=byTeam[p.t]||[]).push(i);});
+  const rank=new Array(PLAYERS.length).fill(99);
+  Object.values(byTeam).forEach(ix=>{ix.sort((a,b)=>PLAYERS[b].ovr-PLAYERS[a].ovr);ix.forEach((idx,r)=>rank[idx]=r);});
+  return rank;
+})();
+const PWEIGHT=PLAYERS.map((p,i)=>(1/(1+Math.exp(-(p.ovr-DRAFT_MID)/DRAFT_STEEP)))*(TEAMRANK[i]<3?TOP3_BOOST:1));
 const PCUM=(()=>{let a=0;return PWEIGHT.map(w=>(a+=w));})();
 const PTOT=PCUM[PCUM.length-1];
-function rnd(){ // weighted index via binary search over cumulative weights
-  const r=Math.random()*PTOT;let lo=0,hi=PCUM.length-1;
+function rnd(){
+  if(!easyMode)return Math.floor(Math.random()*PLAYERS.length); // I Know Ball: raw uniform draw
+  const r=Math.random()*PTOT;let lo=0,hi=PCUM.length-1; // Easy: weighted index via binary search over cumulative weights
   while(lo<hi){const mid=(lo+hi)>>1;if(PCUM[mid]<r)lo=mid+1;else hi=mid;}
   return lo;
+}
+function startGame(m){
+  easyMode=(m==='easy');
+  lineup=[];skips=3;used=new Set();
+  document.getElementById('modeind').textContent=easyMode?'Easy mode':'I Know Ball';
+  document.getElementById('start').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('game').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  newPair();
 }
 function newPair(){
   let a,b;
@@ -394,10 +462,12 @@ function pick(id){
   newPair();
 }
 function doSkip(){if(skips<=0)return;skips--;newPair();}
-function reset(){lineup=[];skips=3;used=new Set();
+function reset(){ // back to the difficulty picker — choose a mode to start a fresh draft
+  lineup=[];skips=3;used=new Set();
+  document.getElementById('game').style.display='none';
   document.getElementById('results').style.display='none';
-  document.getElementById('game').style.display='block';
-  window.scrollTo({top:0,behavior:'smooth'});newPair();}
+  document.getElementById('start').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});}
 
 // ---- Monte Carlo: where the user's team OVR sits in the field ----
 function analyze(myAvg){
@@ -542,6 +612,11 @@ function finish(){
   const challengers=buildChallengers(avg,userIds,lineup);
   const rank=Math.round((1-d.pct/100)*d.SAMPLES)+1;
   const verdict=d.pct>=99?'🏆 Championship Superteam':d.pct>=90?'🔥 Elite Contender':d.pct>=70?'💪 Playoff Lineup':d.pct>=40?'😐 Middle Of The Pack':'🪑 Rebuilding Mode';
+  // prominent difficulty badge — "I Know Ball" reads like an earned medal; Easy stays modest
+  const flex = !easyMode && d.pct>=80 ? '<span class="mb-flex">★ Earned blind ★</span>' : '';
+  const modeBadge = easyMode
+    ? \`<div class="modebadge easy"><span class="mb-ic">🟢</span><div class="mb-txwrap"><span class="mb-tx">Easy Mode</span><span class="mb-sub">Assisted draw · scrubs filtered out</span></div></div>\`
+    : \`<div class="modebadge ball"><span class="mb-ic">🏀</span><div class="mb-txwrap"><span class="mb-tx">I Know Ball</span><span class="mb-sub">No assists · raw 1-in-602 draw</span></div>\${flex}</div>\`;
 
   const teamRows=lineup.slice().sort((a,b)=>b.ovr-a.ovr).map(p=>{const c=tcolor(p.t),tcol=txtOn(c);
     return \`<div class="htrow"><div class="ha" style="background:\${c};color:\${tcol}">\${initials(p.n)}</div>
@@ -591,8 +666,9 @@ function finish(){
   R.innerHTML=\`<div class="fade">
     <p class="shothint">📸 Screenshot the card below to share</p>
     <div class="sharewrap"><div class="sharecard" id="sharecard">
-      <div class="sc-head"><b>🏀 Hardwood Draft</b><span class="o">My Starting Five · '26</span></div>
+      <div class="sc-head"><b>🏀 Hardwood Draft</b><span class="o">\${easyMode?'Easy Mode':'I Know Ball'} · '26</span></div>
       <div class="sc-body">
+        \${modeBadge}
         <div class="hero">
           <div class="hero-score">
             <div class="kicker">Final Team OVR</div>
@@ -662,7 +738,7 @@ function drawHist(d,avg){
   ctx.fillStyle='#16130f';ctx.fillRect(tx,2,tw,18);
   ctx.fillStyle='#f2e7d2';ctx.textAlign='center';ctx.fillText(tag,tx+tw/2,15);
 }
-newPair();
+// game waits on the start screen until a difficulty is chosen (startGame)
 </script>
 </body>
 </html>`;

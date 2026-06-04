@@ -2,6 +2,8 @@
 
 A single-page, zero-dependency basketball drafting game. You're shown two random NBA players; pick the one you think is better. Do it five times (with three skips on the clock) to assemble a starting five, then see how your squad stacks up — its overall rating, where it lands against the entire universe of possible lineups, and the rival teams that would beat you.
 
+Pick your poison with a difficulty toggle: **Easy mode** filters out the scrubs so you mostly weigh real rotation players, while **"I Know Ball" mode** deals a raw uniform draw across all 602 players — deep-bench filler included.
+
 **Stats & ratings courtesy of [Dunks & Threes](https://dunksandthrees.com/).** All player metrics — RAPM impact, box-score rates, and the z-scores the OVR is built from — come from their public data for the 2026 season.
 
 > Built as a self-contained `index.html` — no server, no build step to *run* it. Just open the file.
@@ -12,7 +14,7 @@ A single-page, zero-dependency basketball drafting game. You're shown two random
 
 - [How a player's OVR is computed](#how-a-players-ovr-is-computed)
 - [The five pillars (Squad Ratings)](#the-five-pillars-squad-ratings)
-- [The matchup draw — skill-weighted randomness](#the-matchup-draw--skill-weighted-randomness)
+- [The matchup draw — two difficulty modes](#the-matchup-draw--two-difficulty-modes)
 - [Where your lineup ranks (Monte Carlo)](#where-your-lineup-ranks-monte-carlo)
 - [Who beats you — the rival engine](#who-beats-you--the-rival-engine)
   - [Slight edges](#1-slight-edges-the-squeakers)
@@ -48,25 +50,44 @@ So a league-average player sits around **58**, and the very best (Jokić, Wemban
 
 Every player also carries a 0–100 score in each pillar — **Scoring, Playmaking, Size (rebounding), Defense, Impact**. These are what you see on the cards and in your team's **Squad Ratings**. A team's pillar value is just the average of its five players' values in that pillar. They power both the live ratings panel while you draft and the rival engine's weakness detection.
 
-## The matchup draw — skill-weighted randomness
+## The matchup draw — two difficulty modes
 
-A naïve game would show two *uniformly* random players, but with 602 players and a median OVR of 75, you'd mostly stare at forgettable rotation guys. Instead, each card is drawn with probability proportional to a power of the player's rating:
+A toggle at the top sets how the two matchup cards are drawn:
+
+### 🟢 Easy mode (default)
+
+With 602 players and a median OVR of 75, a *uniform* draw would mostly serve up forgettable end-of-bench guys. Easy mode shapes the draw with two factors:
+
+**1. A logistic floor** that suppresses low-rated players without inflating the OVR tail:
 
 ```
-weight(player) ∝ (OVR − 58)³
+floor(player) = 1 / ( 1 + e^−((OVR − 73) / 2) )
 ```
 
-Sampling is done by precomputing cumulative weights once and binary-searching a uniform random point into them — O(log n) per draw. The cubic exponent was tuned to hit a specific feel:
+The key property: it **saturates at ~1 for every rotation-caliber player and up**, so the high end keeps its *natural* OVR frequency — only the bottom decays. (A power-law weight like `OVR³` was rejected precisely because it over-represents superstars.)
 
-| Outcome | Uniform | **This game (exp = 3)** |
-|---------|---------|--------------------------|
-| Average drawn OVR | 75.9 | **≈ 81.6** (a top rotation player) |
-| Chance of a star (90+) | 4.0% | **≈ 12%** |
-| Chance of a bum (≤70) | 8.1% | **≈ 2.3%** |
+**2. A top-3-on-team boost (×2.5).** Each franchise's three best players (by OVR) are its recognizable faces, so they're weighted up — you mostly see players you actually know:
 
-Net effect: the typical matchup is between two genuinely good players, stars show up often enough to be exciting, and every so often a Bismack Biyombo (OVR 65) wanders in to keep you honest.
+```
+weight(player) = floor(player) × (player is top-3 on their team ? 2.5 : 1)
+```
 
-> Note: this weighting **only** affects the cards you're dealt. The "where you rank" baseline below deliberately stays uniform, because it represents the full space of *possible* lineups, not the ones you're likely to be offered.
+Sampling is done by precomputing cumulative weights once and binary-searching a uniform random point into them — O(log n) per draw.
+
+| Outcome | Uniform | **Easy mode** |
+|---------|---------|----------------|
+| Average drawn OVR | 75.9 | **≈ 80** (a starter) |
+| Chance of a top-3-on-team player | 23% | **≈ 43%** |
+| Chance of a star (90+) | 2.0% | **≈ 5.8%** |
+| Chance of a bum (≤70) | 13.3% | **≈ 1.9%** |
+
+Net effect: the typical matchup is between two recognizable, good players, the scrubs (a Bismack Biyombo at OVR 65) are mostly filtered out, and you frequently see franchise cornerstones.
+
+### 🔴 "I Know Ball" mode
+
+No adjustment at all — a **raw uniform draw** across all 602 players. You'll see plenty of deep-bench scrubs, and telling a genuine rotation piece from a roster-filler is on you. For people who actually know the league.
+
+> Either way, the weighting **only** affects the cards you're dealt. The "where you rank" baseline below deliberately stays uniform, because it represents the full space of *possible* lineups, not the ones you're offered.
 
 ## Where your lineup ranks (Monte Carlo)
 
