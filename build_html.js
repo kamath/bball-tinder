@@ -55,8 +55,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .dek{font-family:'DM Mono',monospace;font-size:clamp(10px,2.4vw,13px);letter-spacing:clamp(1px,1vw,5px);
   text-transform:uppercase;color:var(--orange);font-weight:500;margin-top:9px}
 /* ---------- START / DIFFICULTY PICKER ---------- */
-#start{text-align:center;animation:fade .4s ease both}
-.start-q{font-family:'Anton';font-weight:400;font-size:clamp(22px,5vw,34px);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 20px}
+#start{text-align:center;animation:fade .4s ease both;padding-top:8px}
+.wordmark{font-family:'Anton';font-weight:400;font-size:clamp(28px,7vw,46px);text-transform:uppercase;letter-spacing:.5px;line-height:.9;
+  margin:6px 0 22px;background:linear-gradient(180deg,var(--ink) 55%,var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:2px 2px 0 rgba(226,82,27,.18)}
+.start-q{font-family:'DM Mono';font-size:12px;text-transform:uppercase;letter-spacing:3px;color:var(--orange);margin:0 0 16px}
 .modecards{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:720px;margin:0 auto}
 .modecard{font-family:inherit;text-align:left;background:var(--paper);border:3px solid var(--ink);box-shadow:var(--shadow);
   padding:20px;cursor:pointer;display:flex;flex-direction:column;gap:11px;transition:transform .14s,box-shadow .14s}
@@ -68,7 +71,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .modecard.ball .mc-d{color:var(--wood)}
 .mc-go{margin-top:auto;font-family:'Anton';font-weight:400;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;
   background:var(--orange);color:#fff;padding:9px;text-align:center}
-#modeind{color:var(--orange);font-weight:700}
 
 /* ---------- ROSTER / DRAFT BOARD ---------- */
 .board{background:var(--paper2);border:3px solid var(--ink);box-shadow:var(--shadow);
@@ -120,7 +122,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .ovrstamp{position:absolute;top:8px;right:10px;text-align:center;transform:rotate(5deg)}
 .ovrstamp b{font-family:'Anton';font-size:46px;line-height:.8;display:block}
 .ovrstamp span{font-family:'DM Mono';font-size:9px;letter-spacing:3px;color:var(--ink2)}
-.pillars{display:grid;gap:5px;margin:10px 0 12px}
+.statsbox{margin:0}
+.statsbox>summary{list-style:none;cursor:pointer;user-select:none;font-family:'DM Mono';font-size:9.5px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--ink2);padding:9px 0 5px;display:flex;align-items:center;gap:6px;border-top:2px solid var(--ink)}
+.statsbox>summary::-webkit-details-marker{display:none}
+.statsbox>summary::before{content:'▸';color:var(--orange);font-size:11px}
+.statsbox[open]>summary::before{content:'▾'}
+.statsbox>summary:hover{color:var(--ink)}
+.pillars{display:grid;gap:5px;margin:6px 0 12px}
 .pillars .mkrow{grid-template-columns:30px 1fr 22px;gap:6px}
 .pillars .mk-k{font-size:8.5px}
 .pillars .mk-seg{height:9px;border-width:1px}
@@ -301,18 +310,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 <body>
 <div class="frame">
 
-  <header class="masthead">
-    <div class="rule"></div>
-    <div class="mast-row">
-      <span class="mast-side">Vol. 26 · '26</span>
-      <h1 class="title">Hardwood Draft</h1>
-      <span class="mast-side">The Draft Program</span>
-    </div>
-    <div class="rule double"></div>
-    <p class="dek">Pick the better man · Build a five · Three skips on the clock</p>
-  </header>
-
   <div id="start">
+    <div class="wordmark">🏀 Hardwood Draft</div>
     <p class="start-q">Pick your difficulty</p>
     <div class="modecards">
       <button class="modecard" onclick="startGame('easy')">
@@ -329,7 +328,6 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
   </div>
 
   <div id="game" style="display:none">
-    <p class="matchline">— On the clock · <span id="modeind">Easy mode</span> · choose your man —</p>
     <div class="arena" id="arena"></div>
     <p class="pickhint">▲ Tap a card to draft that player ▲</p>
     <div class="controls">
@@ -377,6 +375,7 @@ function segBar(label,val,seg){
 
 let lineup=[],skips=3,used=new Set(),pair=[];
 let easyMode=true; // Easy = skill-weighted draw (fewer bums); "I Know Ball" = raw uniform draw
+let statsOpen=window.innerWidth>760; // card ratings/stats expanded by default on desktop, collapsed on mobile
 
 // Easy-mode draw weighting (I Know Ball mode ignores this and draws uniformly):
 //  • a logistic FLOOR — 1/(1+e^-((OVR-73)/2)) — saturates at ~1 for rotation-caliber players and up and
@@ -402,7 +401,6 @@ function rnd(){
 function startGame(m){
   easyMode=(m==='easy');
   lineup=[];skips=3;used=new Set();
-  document.getElementById('modeind').textContent=easyMode?'Easy mode':'I Know Ball';
   document.getElementById('start').style.display='none';
   document.getElementById('results').style.display='none';
   document.getElementById('game').style.display='block';
@@ -430,11 +428,14 @@ function cardHTML(p){
           <div class="pmeta">\${p.ht} · \${p.age} YRS · RAPM \${p.rapm>=0?'+':''}\${p.rapm}</div>
         </div>
       </div>
-      <div class="pillars">\${pills}</div>
-      <div class="boxscore">
-        <span><b>\${p.pts}</b> PTS</span><span><b>\${p.reb}</b> REB</span><span><b>\${p.ast}</b> AST</span>
-        <span><b>\${p.stl}</b> STL</span><span><b>\${p.blk}</b> BLK</span><span><b>\${p.ts}%</b> TS</span>
-      </div>
+      <details class="statsbox" \${statsOpen?'open':''} ontoggle="statsOpen=this.open" onclick="event.stopPropagation()">
+        <summary>Ratings &amp; Stats</summary>
+        <div class="pillars">\${pills}</div>
+        <div class="boxscore">
+          <span><b>\${p.pts}</b> PTS</span><span><b>\${p.reb}</b> REB</span><span><b>\${p.ast}</b> AST</span>
+          <span><b>\${p.stl}</b> STL</span><span><b>\${p.blk}</b> BLK</span><span><b>\${p.ts}%</b> TS</span>
+        </div>
+      </details>
     </div>
     <div class="picktag">Draft ▶</div>
   </article>\`;
