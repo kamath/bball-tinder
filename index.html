@@ -128,9 +128,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opac
 .boxscore{border-top:2px solid var(--ink);padding-top:8px;font-family:'DM Mono';font-size:11px;color:var(--ink2);
   display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px 8px}
 .boxscore b{color:var(--ink);font-weight:500}
-.picktag{text-align:center;font-family:'Anton';font-size:13px;letter-spacing:2px;padding:7px;
-  background:var(--ink);color:var(--paper);text-transform:uppercase;transition:background .14s}
-.pcard:hover .picktag{background:var(--orange)}
+.picktag{display:block;width:100%;border:none;cursor:pointer;text-align:center;font-family:'Anton';font-weight:400;
+  font-size:14px;letter-spacing:2px;padding:10px 7px;background:var(--ink);color:var(--paper);text-transform:uppercase;transition:background .14s}
+.pcard:hover .picktag,.picktag:hover,.picktag:focus-visible{background:var(--orange);outline:none}
 
 /* ---------- CONTROLS ---------- */
 .controls{display:flex;gap:12px;justify-content:center;margin-top:6px;flex-wrap:wrap}
@@ -356,7 +356,9 @@ const POSNAME={PG:'PG',SG:'SG',SF:'SF',PF:'PF',C:'C'};
 const ovrColor=o=>o>=95?'#e2521b':o>=88?'#c8852b':o>=80?'#1c7c54':o>=73?'#2e6ba8':'#7d6f59';
 function tcolor(t){return TC[t]||'#3a4356';}
 function txtOn(hex){const c=hex.replace('#','');const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);return (0.299*r+0.587*g+0.114*b)>150?'#16130f':'#fff';}
-function initials(n){const p=n.trim().split(/\s+/);return (p[0][0]+(p[p.length-1][0]||'')).toUpperCase();}
+// last name ignoring generational suffixes (Jr/Sr/II/III/IV/V) — "Dereck Lively II" → "Lively"
+function lastName(n){const p=n.trim().split(/\s+/);let i=p.length-1;while(i>0&&/^(jr|sr|ii|iii|iv|v)\.?$/i.test(p[i]))i--;return p[i];}
+function initials(n){const p=n.trim().split(/\s+/);if(p.length===1)return p[0].slice(0,2).toUpperCase();const l=lastName(n);return ((p[0][0]||'')+(l[0]||'')).toUpperCase();}
 // Mario-Kart-style segmented rating bar — shared by player cards and the team Squad Ratings
 function segBar(label,val,seg){
   const col=ovrColor(val),filled=Math.max(0,Math.min(seg,Math.round(val/100*seg)));
@@ -419,8 +421,8 @@ function cardHTML(p){
           <div class="pmeta">${p.ht} · ${p.age} YRS · RAPM ${p.rapm>=0?'+':''}${p.rapm}</div>
         </div>
       </div>
-      <details class="statsbox" ${statsOpen?'open':''} ontoggle="statsOpen=this.open" onclick="event.stopPropagation()">
-        <summary>Ratings &amp; Stats</summary>
+      <details class="statsbox" ${statsOpen?'open':''} ontoggle="statsOpen=this.open">
+        <summary onclick="event.stopPropagation()">Ratings &amp; Stats</summary>
         <div class="pillars">${pills}</div>
         <div class="boxscore">
           <span><b>${p.pts}</b> PTS</span><span><b>${p.reb}</b> REB</span><span><b>${p.ast}</b> AST</span>
@@ -428,7 +430,7 @@ function cardHTML(p){
         </div>
       </details>
     </div>
-    <div class="picktag">Draft ▶</div>
+    <button class="picktag" onclick="event.stopPropagation();pick('${p.id}')">Draft ${lastName(p.n)} ▶</button>
   </article>`;
 }
 function render(){
@@ -627,7 +629,7 @@ function finish(){
     challengers.map((ch,ci)=>{
       const chips=ch.players.map(p=>{const c=tcolor(p.t);return `<div class="chip">
         <div class="cav" style="background:${c};color:${txtOn(c)}">${initials(p.n)}</div>
-        <div class="cn">${p.n.split(' ').slice(-1)[0]}</div>
+        <div class="cn">${lastName(p.n)}</div>
         <div class="ct">${p.t} · ${p.pos}</div>
         <div class="cvo">${p.ovr}</div></div>`;}).join('');
       const statBand = ch.kind==='exploit'
@@ -688,8 +690,6 @@ function finish(){
     </div></div>
     <div class="controls" style="margin-top:22px">
       <button class="btn primary" onclick="reset()">↻ Draft A New Five</button>
-      <a class="btn" href="https://github.com/kamath/bball-tinder#readme" target="_blank" rel="noopener">📖 How It Works</a>
-      <a class="btn" href="https://github.com/kamath/bball-tinder" target="_blank" rel="noopener">★ Star</a>
     </div>
   </div>`;
 
